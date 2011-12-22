@@ -2,7 +2,7 @@ SOOS
 
 A substitutable object output stream
 
-SOOS is a format compatible with ObjectOutputStream/ObjectInputStream to provide a more compressed stream by converting substitutable objects written into the stream into a write of one specific interned object. A substitutable object is an object of an Immutable class, such that if you have two objects of that class (a, b) and a.hashCode() == b.hashCode() and a.equals(b) performing a = b or b = a does not change the behavior of your program. Such examples are the Boxed primitives and the String class. You can add your own classes that follow this behavior.
+SOOS is an format-compatible OutputStream, compatible with ObjectOutputStream/ObjectInputStream to provide a more compressed stream by converting substitutable objects written into the stream into a write of one specific interned object. A substitutable object is an object of an Immutable class, such that if you have two objects of that class (a, b) and a.hashCode() == b.hashCode() and a.equals(b) performing a = b or b = a does not change the behavior of your program. Such examples are the Boxed primitives and the String class. You can add your own classes that follow this behavior.
 
 Use it identically to an ObjectOutputStream, and read the data with the standard ObjectInputStream.
 
