@@ -1,0 +1,144 @@
+<!--
+/*
+ * soos - An object output stream that replaces substitutable objects with an interned version
+ * for better stream sizing.
+ *
+ * Copyright 2011 MeBigFatGuy.com
+ * Copyright 2011 Dave Brosius
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ */
+ -->
+
+<project name="soos" default="jar">
+	<property file="build.properties" />
+
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="test.dir" value="${basedir}/test" />
+	<property name="classes.dir" value="${basedir}/classes" />
+	<property name="reports.dir" value="${basedir}/reports" />
+	<property name="lib.dir" value="${basedir}/lib" />
+	<property name="javadoc.dir" value="${basedir}/javadoc" />
+	<property name="javac.source" value="1.5" />
+	<property name="javac.target" value="1.5" />
+	<property name="javac.deprecation" value="on" />
+	<property name="javac.debug" value="on" />
+
+	<property name="soos.version" value="0.7.0" />
+
+	<property name="junit.version" value="4.10" />
+
+	<property name="junit-url" value="http://repo1.maven.org/maven2/junit/junit/${junit.version}/junit-${junit.version}.jar" />
+
+	<target name="junit-check">
+		<available file="${basedir}/lib/junit-${junit.version}.jar" property="junit-exists" />
+	</target>
+
+	<target name="install-junit" depends="junit-check" unless="junit-exists" description="installs junit.jar into lib">
+		<get src="${junit-url}" dest="${lib.dir}/junit-${junit.version}.jar" verbose="true" ignoreerrors="true" />
+	</target>
+
+	<target name="pull" depends="install-junit" description="pull 3rdparty jars to the lib directory" />
+
+	<path id="soos.classpath">
+		<pathelement location="${lib.dir}/junit-${junit.version}.jar" />
+		<pathelement location="${classes.dir}" />
+	</path>
+
+	<target name="clean" description="removes all generated collateral">
+		<delete dir="${classes.dir}" />
+		<delete dir="${reports.dir}" />
+		<delete dir="${javadoc.dir}" />
+		<delete file="${basedir}/soos-${soos.version}.jar" />
+		<delete file="${basedir}/soos-src-${soos.version}.zip" />
+	</target>
+
+	<target name="-init" description="prepares repository for a build">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${reports.dir}" />
+		<mkdir dir="${javadoc.dir}" />
+		<mkdir dir="${lib.dir}" />
+	</target>
+
+	<target name="compile" depends="-init" description="compiles java files">
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" source="${javac.source}" target="${javac.target}" deprecation="${javac.deprecation}" debug="${javac.debug}" includeantruntime="false">
+			<classpath refid="soos.classpath" />
+		</javac>
+		<javac srcdir="${test.dir}" destdir="${classes.dir}" source="${javac.source}" target="${javac.target}" deprecation="${javac.deprecation}" debug="${javac.debug}" includeantruntime="false">
+			<classpath refid="soos.classpath" />
+		</javac>
+	</target>
+
+	<target name="test" depends="compile" description="run the unit tests">
+		<junit printsummary="yes" haltonfailure="yes" haltonerror="true" showoutput="true">
+			<classpath>
+				<pathelement path="${classes.dir}" />
+				<pathelement path="${lib.dir}/junit-${junit.version}.jar" />
+			</classpath>
+			<batchtest fork="false" todir="${reports.dir}">
+				<fileset dir="${classes.dir}" />
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="build" depends="clean, -init, pull, compile, test" description="compiles the code" />
+
+	<target name="jar" depends="build" description="produces the soos jar file">
+		<jar destfile="${basedir}/soos-${soos.version}.jar">
+			<fileset dir="${classes.dir}">
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${basedir}">
+				<include name="LICENSE" />
+			</fileset>
+			<manifest>
+				<attribute name="soos-version" value="${soos.version}" />
+				<attribute name="Bundle-ManifestVersion" value="2" />
+				<attribute name="Bundle-Name" value="soos plugin" />
+				<attribute name="Bundle-SymbolicName" value="soos; singleton:=true" />
+				<attribute name="Bundle-Version" value="${soos.version}" />
+				<attribute name="Bundle-ClassPath" value="." />
+				<attribute name="Bundle-Vendor" value="MeBigFatGuy.com" />
+				<attribute name="Bundle-ActivationPolicy" value="lazy" />
+				<attribute name="Export-Package" value="com.mebigfatguy.soos;version=&quot;${soos.version}&quot;" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="srczip" description="builds the source distribution zip file">
+		<zip destfile="${basedir}/soos-src-${soos.version}.zip" basedir="${basedir}">
+			<fileset dir="${src.dir}">
+				<include name="**/*.java" />
+			</fileset>
+			<fileset dir="${test.dir}">
+				<include name="**/*.java" />
+			</fileset>
+			<fileset dir="${basedir}">
+				<include name="build.xml" />
+				<include name="README" />
+				<include name="LICENSE" />
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="javadoc" depends="-init" description="build the javadoc for the project">
+		<javadoc packagenames="com.mebigfatguy.*" sourcepath="${src.dir}" classpathref="soos.classpath" destdir="${javadoc.dir}" windowtitle="soos api">
+			<doctitle>
+				<![CDATA[<h1>soos javadoc</h1>]]></doctitle>
+		<bottom>
+			<![CDATA[<i>Copyright &#169; 2011-2011 MeBigFatGuy.com. All Rights Reserved.</i>]]></bottom>
+</javadoc>
+</target>
+
+<target name="release" depends="build, srczip, javadoc" description="prepares everything for a release" />
+</project>

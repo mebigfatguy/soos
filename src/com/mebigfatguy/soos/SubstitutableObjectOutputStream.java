@@ -1,6 +1,6 @@
 /*
  * soos - An object output stream that replaces substitutable objects with an interned version
- * for better stream sizing
+ * for better stream sizing.
  * 
  * Copyright 2011 MeBigFatGuy.com
  * Copyright 2011 Dave Brosius
